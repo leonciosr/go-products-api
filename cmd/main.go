@@ -48,8 +48,10 @@ func main() {
 	//usecase
 	ProductUsecase := usecase.NewProductUsecase(ProductRepository)
 	//controller
-	productController := controller.NewProductController(ProductUsecase)
-	server.GET("/products", productController.GetProducts)
+	ProductController := controller.NewProductController(ProductUsecase)
+	server.GET("/products", ProductController.GetProducts)
+	server.GET("/products/:id", ProductController.GetProductsById)
+	server.POST("/products", ProductController.CreateProduct)
 
 	server.Run(":8000")
 

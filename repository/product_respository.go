@@ -41,3 +41,49 @@ func (pr *ProductRepository) GetProducts() ([]model.Product, error) {
 	rows.Close()
 	return products, nil
 }
+
+func (pr *ProductRepository) CreateProduct(product model.Product) (model.Product, error) {
+	query, err := pr.connection.Prepare(`
+		insert into products (name, price) values ($1, $2) returning id
+	`)
+	if err != nil {
+		log.Error().Err(err).Stack().Msg("failed to prepare product creation")
+		return product, err
+	}
+	err = query.QueryRow(product.Name, product.Price).Scan(&product.ID)
+	if err != nil {
+		log.Error().Err(err).Stack().Msg("failed to associate parameters to product creation query")
+		return product, err
+	}
+	query.Close()
+
+	return product, err
+}
+
+func (pr *ProductRepository) GetProductById(id int) (*model.Product, error) {
+	query, err := pr.connection.Prepare(`
+		select id, name, price from products where id = $1
+	`)
+	if err != nil {
+		log.Error().Err(err).Stack().Msg("failed to prepare query do find product by id")
+		return nil, err
+	}
+	var product model.Product
+	err = query.QueryRow(id).Scan(
+		&product.ID,
+		&product.Name,
+		&product.Price,
+	)
+	if err != nil {
+		log.Error().Err(err).Stack().Msg("failed to execute query do find product by id")
+		if err == sql.ErrNoRows {
+			log.Debug().Msg("not found product")
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	query.Close()
+
+	return &product, nil
+}
