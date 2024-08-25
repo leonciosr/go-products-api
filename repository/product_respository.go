@@ -65,7 +65,7 @@ func (pr *ProductRepository) GetProductById(id int) (*model.Product, error) {
 		select id, name, price from products where id = $1
 	`)
 	if err != nil {
-		log.Error().Err(err).Stack().Msg("failed to prepare query do find product by id")
+		log.Error().Err(err).Stack().Msg("failed to prepare query to find product by id")
 		return nil, err
 	}
 	var product model.Product
@@ -75,7 +75,7 @@ func (pr *ProductRepository) GetProductById(id int) (*model.Product, error) {
 		&product.Price,
 	)
 	if err != nil {
-		log.Error().Err(err).Stack().Msg("failed to execute query do find product by id")
+		log.Error().Err(err).Stack().Msg("failed to execute query to find product by id")
 		if err == sql.ErrNoRows {
 			log.Debug().Msg("not found product")
 			return nil, nil
@@ -86,4 +86,26 @@ func (pr *ProductRepository) GetProductById(id int) (*model.Product, error) {
 	query.Close()
 
 	return &product, nil
+}
+
+func (pr *ProductRepository) DeleteProductById(id int) (*model.Product, error) {
+	product, err := pr.GetProductById(id)
+	if err != nil {
+		return nil, err
+	}
+	query, err := pr.connection.Prepare(`
+		delete from products where id = $1
+	`)
+	if err != nil {
+		log.Error().Err(err).Stack().Msg("failed to prepare query to delete product by id")
+		return nil, err
+	}
+
+	err = query.QueryRow(id).Err()
+	if err != nil {
+		log.Error().Err(err).Stack().Msg("failed to execute query to delete product by id")
+		return nil, err
+	}
+	return product, nil
+
 }
