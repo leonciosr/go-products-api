@@ -13,6 +13,16 @@ services:
     networks:
       - postgres_network
 
+  go_products_api:
+    container_name: go_products_api
+    image: go_products_api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      - go_products_db
 volumes:
   postgres_data:
 
